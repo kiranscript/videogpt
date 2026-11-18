@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   SUPPORTED_DURATIONS,
   SupportedDurationSchema,
-} from "@/lib/others/schemas/duration";
+} from "@/lib/schema/duration";
 
 export const EvaluationCategorySchema = z.enum([
   "software-topology",

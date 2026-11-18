@@ -5,12 +5,12 @@ import {
   planVideoScenes,
   VideoPlanSchema,
   type VideoPlan,
-} from "@/lib/agent/rootGeneration/planner";
-import type { RootGenerationModelCaller } from "@/lib/agent/rootGeneration/openrouter";
+} from "@/lib/generation/planner";
+import type { ModelCaller } from "@/lib/generation/openrouter";
 import {
   buildVideoPlannerSystemPrompt,
   buildVideoSceneSystemPrompt,
-} from "@/lib/agent/rootGeneration/prompts";
+} from "@/lib/generation/prompts";
 
 const basePlan: VideoPlan = {
   title: "Solar Power",
@@ -283,7 +283,7 @@ describe("buildVideoSceneSystemPrompt", () => {
 
 describe("planVideoScenes", () => {
   it("selects exactly one substantive content scene for a five-second video", async () => {
-    const callModel: RootGenerationModelCaller = async () => basePlan;
+    const callModel: ModelCaller = async () => basePlan;
     const plan = await planVideoScenes(
       { prompt: "How does solar power work?", duration: 5 },
       { callModel },
@@ -294,7 +294,7 @@ describe("planVideoScenes", () => {
   });
 
   it("returns the parsed plan and normalizes duplicate or reserved scene ids", async () => {
-    const callModel: RootGenerationModelCaller = async () => ({
+    const callModel: ModelCaller = async () => ({
       ...basePlan,
       scenes: [
         { ...basePlan.scenes[0], id: "intro" },
@@ -312,7 +312,7 @@ describe("planVideoScenes", () => {
 
   it("keeps normalized duplicate ids within the planner schema limit", async () => {
     const longId = "abcdefghijklmnopqrstuvwx";
-    const callModel: RootGenerationModelCaller = async () => ({
+    const callModel: ModelCaller = async () => ({
       ...basePlan,
       scenes: [
         { ...basePlan.scenes[1], id: longId },
@@ -334,7 +334,7 @@ describe("planVideoScenes", () => {
   it("repairs invalid planner output once", async () => {
     const userPrompts: string[] = [];
     let calls = 0;
-    const callModel: RootGenerationModelCaller = async (_systemPrompt, userPrompt) => {
+    const callModel: ModelCaller = async (_systemPrompt, userPrompt) => {
       calls += 1;
       userPrompts.push(userPrompt as string);
       if (calls === 1) return { title: 42 };
@@ -351,7 +351,7 @@ describe("planVideoScenes", () => {
 
   it("does not accept overview as the only content scene", async () => {
     let calls = 0;
-    const callModel: RootGenerationModelCaller = async () => {
+    const callModel: ModelCaller = async () => {
       calls += 1;
       return calls === 1
         ? { ...basePlan, scenes: [basePlan.scenes[0]] }
@@ -367,7 +367,7 @@ describe("planVideoScenes", () => {
   });
 
   it("falls back to the default plan when repair also fails", async () => {
-    const callModel: RootGenerationModelCaller = async () => ({ nope: true });
+    const callModel: ModelCaller = async () => ({ nope: true });
     const plan = await planVideoScenes(
       { prompt: "How does solar power work?", duration: 10 },
       { callModel },
@@ -377,7 +377,7 @@ describe("planVideoScenes", () => {
 
   it("falls back to the default plan on provider failure", async () => {
     let calls = 0;
-    const callModel: RootGenerationModelCaller = async () => {
+    const callModel: ModelCaller = async () => {
       calls += 1;
       throw new Error("OpenRouter HTTP 500");
     };
@@ -394,7 +394,7 @@ describe("planVideoScenes", () => {
       { ...basePlan.scenes[1], id: "mechanism" },
       { ...basePlan.scenes[2], id: "comparison" },
     ];
-    const callModel: RootGenerationModelCaller = async () => ({ ...basePlan, scenes });
+    const callModel: ModelCaller = async () => ({ ...basePlan, scenes });
     const plan = await planVideoScenes(
       { prompt: "How does solar power work?", duration: 20 },
       { callModel },
@@ -403,7 +403,7 @@ describe("planVideoScenes", () => {
   });
 
   it("drops an overview before substantive scenes from an over-limit response", async () => {
-    const callModel: RootGenerationModelCaller = async () => ({
+    const callModel: ModelCaller = async () => ({
       ...basePlan,
       scenes: [
         basePlan.scenes[0],
@@ -420,7 +420,7 @@ describe("planVideoScenes", () => {
   });
 
   it("keeps at most one overview and places it before substantive scenes", async () => {
-    const callModel: RootGenerationModelCaller = async () => ({
+    const callModel: ModelCaller = async () => ({
       ...basePlan,
       scenes: [
         basePlan.scenes[1],

@@ -1,11 +1,11 @@
-import { VideoProjectSchema } from "@/lib/others/schemas/timeline";
+import { VideoProjectSchema } from "@/lib/schema/timeline";
 import {
   boundsOverlap,
   getEventBounds,
   timeOverlap,
   type Bounds,
-} from "@/lib/ui/renderer/geometry";
-import type { TimelineEvent } from "@/lib/ui/renderer";
+} from "@/lib/rendering/geometry";
+import type { TimelineEvent } from "@/lib/rendering";
 
 export type EvaluationDiagnosticCode =
   | "renderer-schema-failure"

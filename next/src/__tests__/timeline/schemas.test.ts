@@ -8,8 +8,8 @@ import {
   TextEventSchema,
   TimelineEventSchema,
   VideoProjectSchema,
-} from "@/lib/others/schemas/timeline";
-import { SupportedDurationSchema } from "@/lib/others/schemas/duration";
+} from "@/lib/schema/timeline";
+import { SupportedDurationSchema } from "@/lib/schema/duration";
 
 describe("timeline schemas", () => {
   it.each([5, 10, 15, 20])("accepts supported duration %s", (duration) => {

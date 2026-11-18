@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   generateComposedVideo,
   type ComposedVideoModelCaller,
-} from "@/lib/agent/rootGeneration/composedVideo";
-import { planSceneWindows, type VideoPlan } from "@/lib/agent/rootGeneration/planner";
+} from "@/lib/generation/composedVideo";
+import { planSceneWindows, type VideoPlan } from "@/lib/generation/planner";
+import { getAnimatedStyle } from "@/lib/rendering/animation";
 
 function localDuration(systemPrompt: string): number {
   const match = systemPrompt.match(/SEGMENT DURATION: ([\d.]+)s/);
@@ -231,6 +232,52 @@ describe("composed video generation", () => {
     expect(result.project.events.some((event) => event.id.startsWith("worked-example-"))).toBe(true);
   });
 
+  it("settles entrances quickly and composes editable flow markers with persistent arrows", async () => {
+    const singleScenePlan = { ...plan, scenes: [plan.scenes[1]] };
+    const result = await generateComposedVideo({ prompt: "Show a request and response", duration: 10 }, {
+      callModel: async (systemPrompt) => {
+        if (systemPrompt.includes("PART: planner")) return singleScenePlan;
+        const duration = localDuration(systemPrompt);
+        const events = directEvents(duration, true);
+        const arrows = [
+          { id: "request", start: 1, x1: 720, x2: 1080, y: 400 },
+          { id: "response", start: 3, x1: 1080, x2: 720, y: 580 },
+        ].map(({ id, start, x1, x2, y }) => ({
+          id, start, end: start + 1.5, layer: 4, type: "shape", shapeType: "line",
+          x1, y1: y, x2, y2: y, stroke: "#ffffff", lineWidth: 8, arrowEnd: true, flow: true,
+          opacity: { from: 0, to: 1, easing: "easeIn" },
+        }));
+        return {
+          name: "Exchange", visualIntent: "Show the round trip.",
+          events: [
+            ...events,
+            ...Array.from({ length: 14 }, (_, index) => ({ ...events[2], id: `detail-${index}`, layer: index + 10 })),
+            ...arrows,
+          ],
+        };
+      },
+    });
+
+    const { start: offset, end: sceneEnd } = planSceneWindows(result.plan, 10).scenes[0];
+    const endpoint = result.project.events.find((event) => event.id === "cell-left-shape")!;
+    expect(getAnimatedStyle(endpoint, endpoint.start).opacity).toBe(0);
+    expect(getAnimatedStyle(endpoint, endpoint.start + 0.4).opacity).toBe(1);
+    for (const [id, start, x, delta] of [
+      ["request", 1, 720, 360], ["response", 3, 1080, -360],
+    ] as const) {
+      const line = result.project.events.find((event) => event.id === `cell-${id}`)!;
+      const marker = result.project.events.find((event) => event.id === `cell-${id}-marker`)!;
+      const halfway = offset + start + 0.5;
+      expect(marker).toMatchObject({ start: offset + start, end: offset + start + 1, x });
+      expect(getAnimatedStyle(marker, halfway)).toMatchObject({ offsetX: delta / 2, opacity: 1 });
+      expect(getAnimatedStyle(line, halfway).drawProgress).toBeCloseTo(0.5);
+      expect(getAnimatedStyle(line, marker.end + 0.5).drawProgress).toBe(1);
+      expect(getAnimatedStyle(line, marker.end + 0.5).opacity).toBeCloseTo(0.55);
+      expect(line.end).toBe(sceneEnd);
+      expect(line).not.toHaveProperty("flow");
+    }
+  });
+
   it.each([5, 10, 15, 20] as const)(
     "preserves a %s-second duration with background coverage across every interval",
     async (duration) => {
@@ -357,4 +404,30 @@ describe("composed video generation", () => {
       { callModel },
     )).rejects.toThrow("cell generation failed");
   });
+  it("reuses completed scenes after a provider failure without replanning", async () => {
+    const completed: Record<string, import("@/lib/rendering").VideoProject> = {};
+    let planned: VideoPlan | undefined;
+    const author: ComposedVideoModelCaller = async (systemPrompt) => {
+      if (systemPrompt.includes("PART: planner")) return plan;
+      if (sceneIdOf(systemPrompt) === "cell") throw new Error("Provider temporarily unavailable");
+      const compact = systemPrompt.includes("SCENE ROLE: overview");
+      return { mode: compact ? "direct-summary-timeline" : "direct-timeline", name: "Scene", visualIntent: "Explain solar power", events: directEvents(localDuration(systemPrompt), compact) };
+    };
+    await expect(generateComposedVideo({ prompt: "Solar power", duration: 15 }, {
+      callModel: author, onPlan: (value) => { planned = value; },
+      onScene: (scene) => { completed[scene.scene.id] = scene.project; },
+    })).rejects.toThrow("cell");
+    expect(Object.keys(completed).sort()).toEqual(["overview", "panels"]);
+    const calls: string[] = [];
+    const result = await generateComposedVideo({ prompt: "Solar power", duration: 15, checkpoint: { plan: planned!, completed } }, {
+      callModel: async (systemPrompt) => {
+        calls.push(sceneIdOf(systemPrompt));
+        return { mode: "direct-timeline", name: "Recovered", visualIntent: "Charge separation", events: directEvents(localDuration(systemPrompt), false) };
+      },
+    });
+    expect(calls).toEqual(["cell"]);
+    expect(result.project.duration).toBe(15);
+    expect(result.scenes.find((scene) => scene.scene.id === "overview")?.project).toEqual(completed.overview);
+  });
+
 });

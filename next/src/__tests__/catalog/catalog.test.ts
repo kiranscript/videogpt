@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { PALETTES, DEFAULT_PALETTE } from "@/lib/others/catalog/palettes";
-import type { PaletteSpec } from "@/lib/others/catalog/palettes";
+import { PALETTES, DEFAULT_PALETTE } from "@/lib/catalog/palettes";
+import type { PaletteSpec } from "@/lib/catalog/palettes";
 
 const PALETTE_FIELDS: (keyof PaletteSpec)[] = [
   "bgFrom",

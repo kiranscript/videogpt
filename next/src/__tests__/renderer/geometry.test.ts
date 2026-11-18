@@ -9,8 +9,8 @@ import {
   getEventBounds,
   boundsOverlap,
   timeOverlap,
-} from "@/lib/ui/renderer/geometry";
-import type { TimelineEvent, ShapeEvent, TextEvent, AnimatedValue } from "@/lib/ui/renderer/types";
+} from "@/lib/rendering/geometry";
+import type { TimelineEvent, ShapeEvent, TextEvent, AnimatedValue } from "@/lib/schema/timeline";
 
 // ── Event builders ────────────────────────────────────────────────────────────
 

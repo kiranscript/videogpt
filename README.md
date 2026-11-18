@@ -1,93 +1,118 @@
-# VideoGPT
+# VideoGPT Studio
 
-VideoGPT is an advanced Next.js application that translates natural language prompts into interactive video briefs and renders real-time frame animations. Using a custom Canvas 2D rendering engine, the application acts as a storyboard compiler and renderer, allowing developers and designers to model motion graphics, timelines, text layouts, and particle systems directly from textual descriptions.
+A focused workspace for turning ideas into short animated videos. The original
+VideoGPT is a reference for the rendering and generation techniques; this app
+has a new interface, state model, and project workflow.
 
-https://github.com/user-attachments/assets/4a4115fc-a1ac-4b28-bc17-1c8e62f5cc14
+## Run
 
-## Core Features
+The app lives in `next/`, which is also the Vercel Root Directory.
+Use Linux/macOS Node 22+ (Node 24 recommended):
 
-- **Natural Language Video Synthesis**: Translates text prompts into structured timeline briefs containing scenes, backgrounds, typography, and complex animation properties.
-- **Iterative Project Modification**: Refines existing video projects by sending instructions that modify the structural representation of the timeline without rebuilding it from scratch.
-- **Custom Canvas 2D Engine**: A specialized rendering pipeline supporting layout designs (single-column, split-column, typography focal, etc.), canvas particle systems, gradients, transition effects, and vector graphic generation.
-- **Real-Time Interactive Timeline**: Controls playback speed, scrubs through timelines (5s, 10s, 15s, or 20s), toggles fullscreen rendering, and inspects quality assurance logs.
-- **Offline Session Persistence**: Synchronizes workspace configurations, layout themes, and history using Zustand with immediate local storage serialization.
-- **Command-Line Suite**: Features dedicated node CLI commands for diagnostics, frame validation, performance telemetry, and evaluation of LLM prompt changes.
-
-## Architecture and Codebase Structure
-
-For a complete stage-by-stage visual representation of how prompts are processed, see the [VideoGPT Architecture and Data Flow Diagram](docs/architecture.md).
-
-The application codebase is organized as follows:
-
-- `/src/app`: Implements App Router pages (Generate Workspace, Chat view, Fullscreen Renderer page) and serverless API handlers for orchestration.
-- `/src/components`: UI components divided by responsibility:
-  - `canvas/`: Custom Canvas 2D elements and lifecycle synchronization hook.
-  - `generate/`: Prompt inputs, history feeds, drawer drawers, and chat bubbles.
-  - `home/`: Projects dashboard and session lists.
-  - `player/`: Video timeline controllers, playback rates, fullscreen hooks, and skeleton states.
-- `/src/lib` is categorized by responsibility:
-  - `agent/`: The AI intake pipeline — OpenRouter communication (`agent/ai/`), brief validation and timeline expansion (`agent/brief/`), seed projects (`agent/alpha/`), and the Zod brief/API schemas (`agent/schemas/`).
-  - `ui/`: Client rendering and state — the Canvas 2D renderer (`ui/renderer/`), player hooks (`ui/player/`), media exporters (`ui/core/`), the Zustand store (`ui/store.ts`), persistence, and the API client.
-  - `others/`: Shared, cross-cutting modules — the timeline Zod schemas (`others/schemas/`) and the palette/style/timing catalogs (`others/catalog/`).
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (version 18 or higher recommended)
-- npm or another standard JavaScript package manager
-
-### Installation
-
-1. Navigate to the project directory:
-
-   ```bash
-   cd next
-   ```
-
-2. Install the package dependencies:
-   ```bash
-   npm install
-   ```
-
-### Configuration
-
-Create a `.env.local` file in the `next` directory and supply your API credentials:
-
-```env
-# OpenRouter API Credentials
-OPENROUTER_API_KEY=your_openrouter_api_key
-
-# Default model identifier for prompt translation
-DEFAULT_MODEL=deepseek/deepseek-v4-flash
-
-# Model identifier for visual-check QA analysis (optional)
-VISUAL_CHECK_MODEL=qwen/qwen3.5-flash-02-23
-
-# Output directory for bulk generation CLI scripts (optional)
-# BRAIN_DIR=C:\path\to\your\output\directory
+```sh
+cd next
+npm ci
+npm run dev
 ```
 
-### Running the Application
+Open http://localhost:3000. The studio starts with an editable design. Templates,
+canvas editing, playback, autosave, and exports work without an API key.
 
-1. Start the Next.js local development server:
+To enable AI, copy `.env.example` to `.env.local`, set `OPENROUTER_API_KEY`
+and an OpenRouter `DEFAULT_MODEL`, then restart the server. Keys remain on the
+server. AI creates 5, 10, 15, or 20 second animated explanations.
 
-   ```bash
-   npm run dev
-   ```
+## Create and refine
 
-2. Open your web browser and navigate to `http://localhost:3000` to access the projects dashboard.
+- Choose New video to describe an idea, or start from a template.
+- Select elements on the canvas or in the layer list. Drag to position them,
+  or drag a corner handle to resize. Hold Shift to preserve proportions.
+- Open Properties to edit text, colors, gradients, size, layer names, and timing.
+  On phones, the adjustable sheet keeps the canvas visible for live edits.
+- Add text and shapes; rename your project; undo or redo changes.
+- Jump between scenes, rename them, seek with the timeline ruler, or change
+  playback speed. Expand the timeline when you need more room for element tracks.
+- Use Expand canvas in the canvas toolbar to hide the story timeline. Press
+  Escape or toggle the button again to restore the timeline.
+- Open Element timing to drag, trim, or keyboard-adjust an element’s visible interval.
+- Recover a deleted project with the Undo notice. Cancel an export from its progress card.
+- Export video, GIF, or an editable JSON project file. Import JSON from the
+  project library's upload button.
 
-## Available Scripts
+Shortcuts: Space to play/pause, [ and ] to cycle elements while the canvas
+is focused, arrows to nudge a selected element (Shift for 10px) or step when
+nothing is selected, I for Properties, Escape to clear selection, Delete to
+remove an element, Ctrl/Command Z to undo and Ctrl/Command Shift Z to redo.
 
-The following scripts are defined in `package.json` and can be executed via `npm run <script-name>`:
+Projects and generation checkpoints are autosaved to IndexedDB on this device.
+If generation is interrupted, completed scenes are retained. Open the draft
+and choose **Finish remaining scenes** to generate only missing scenes.
+Undo history is limited to 50 edits and lasts until the page is reloaded.
 
-- `dev`: Launches the local Next.js development server.
-- `build`: Compiles the Next.js client application for production.
-- `start`: Runs the compiled production server.
-- `lint`: Evaluates code style and checks for static errors using ESLint.
-- `test`: Executes all unit and integration test suites using Vitest.
-- `test:watch`: Launches the Vitest test runner in watch mode.
-- `analyze`: Analyzes the rendering configurations and visual structures of projects.
-- `eval`: Conducts automatic prompt evaluations, benchmarking model generation outputs.
-- `diag`: Performs end-to-end client-to-API verification checks using OpenRouter.
+## Visual system
+
+The studio uses the supplied Soft Cyan (`#90F1EF`), Petal Frost (`#FFD6E0`),
+and Light Gold (`#FFEF9F`) palette with dark teal text. Cyan marks selected
+items, gold marks active controls, and timing bars use pastel colors by element
+type. Design and Layers are separate inspector tabs. Typography, geometry, and
+timing can be expanded as needed; the phone sheet includes layer renaming,
+scene navigation, and precise time entry. Phone timing scrolls horizontally to
+keep trim targets usable. Timing sliders support arrow keys and Home/End, and
+announce changes and undo/redo to screen readers.
+
+## Architecture
+
+Paths below are relative to `next/`.
+
+```text
+src/components/studio/    New visual workspace, canvas, properties, playback
+src/lib/workspace/       Project state, undo/redo, IndexedDB, streaming client
+src/lib/project/         Portable document format, editing operations, templates
+src/lib/generation/      One scene planner and one validated generation pipeline
+src/lib/rendering/       Shared deterministic Canvas frame renderer
+src/lib/schema/          Single source of runtime schemas and TypeScript types
+src/lib/export/          Browser video and GIF encoders
+src/lib/evaluation/      Fixed evaluation prompts and visual diagnostics
+src/app/api/generate/    Single streaming API
+```
+
+The legacy chat/session model, dev routes, duplicate generation stack,
+Fabric dependency, architecture viewers, obsolete scripts, compatibility
+migration, and historical planning documents have been removed.
+
+## Checks
+
+Run these commands from `next/`.
+
+```sh
+npm test
+npm run typecheck
+npm run lint
+npm run build
+```
+
+For browser regression tests, run the development server, then:
+
+```sh
+npx playwright install chromium
+npm run test:ui
+```
+
+Set `UI_BASE_URL` to test another server or `E2E_CHROMIUM_PATH` to use an
+existing Chromium executable. See [the UI review record](docs/ui-review.md)
+for the Opus score and verified interaction paths.
+
+With provider credentials, `npm run evaluate` generates the fixed eight-case
+suite and writes project JSON, diagnostics, model identity, and timing into
+`evaluation-artifacts/`. Visual diagnostics flag potential problems; they do
+not replace reviewing rendered output. Live-model evaluation is not part of CI.
+
+## Current limits
+
+Storage is local to this browser; projects are portable through JSON backups.
+Live AI generation was verified with a five-second OpenRouter request.
+Successful encoded-file correctness has not been verified. Browser regression tests cover editing, responsive
+layout, recovery, and export cancellation. Video recording uses real time and requires a visible
+tab; browser support determines MP4 or WebM. GIF uses explicit frame intervals.
+There is no offline MP4 worker, cloud sync, audio, or public-hosting job service.
+Before a public release, add authentication/request budgets and rate limits.
