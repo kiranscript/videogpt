@@ -1,1 +1,0 @@
-export { FabricCanvas } from "./FabricCanvas";
