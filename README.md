@@ -1,13 +1,14 @@
 # VideoGPT Studio
 
-A focused workspace for turning ideas into short animated videos. The original
-VideoGPT is a reference for the rendering and generation techniques; this app
-has a new interface, state model, and project workflow.
+Create short animated videos from a prompt or a template. Edit text, shapes,
+and timing on the canvas and timeline, then export a video, animated GIF, or
+editable project file.
 
-## Run
+![VideoGPT Studio desktop editor with the “A little idea” template open, a headline selected on the canvas, and three scenes in the timeline](docs/media/studio-desktop.png)
 
-The app lives in `next/`, which is also the Vercel Root Directory.
-Use Linux/macOS Node 22+ (Node 24 recommended):
+## Run locally
+
+Use Node.js 22 or newer. The repository pins Node.js 24 in `next/.nvmrc`.
 
 ```sh
 cd next
@@ -15,74 +16,91 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. The studio starts with an editable design. Templates,
-canvas editing, playback, autosave, and exports work without an API key.
+Open [http://localhost:3000](http://localhost:3000). The editor opens with
+**A little idea**, a three-scene starter project. You can edit, play, and
+export it without an API key.
 
-To enable AI, copy `.env.example` to `.env.local`, set `OPENROUTER_API_KEY`
-and an OpenRouter `DEFAULT_MODEL`, then restart the server. Keys remain on the
-server. AI creates 5, 10, 15, or 20 second animated explanations.
+### Enable prompt-to-video generation
 
-## Create and refine
+Copy the environment template from the `next/` directory.
 
-- Choose New video to describe an idea, or start from a template.
-- Select elements on the canvas or in the layer list. Drag to position them,
-  or drag a corner handle to resize. Hold Shift to preserve proportions.
-- Open Properties to edit text, colors, gradients, size, layer names, and timing.
-  On phones, the adjustable sheet keeps the canvas visible for live edits.
-- Add text and shapes; rename your project; undo or redo changes.
-- Jump between scenes, rename them, seek with the timeline ruler, or change
-  playback speed. Expand the timeline when you need more room for element tracks.
-- Use Expand canvas in the canvas toolbar to hide the story timeline. Press
-  Escape or toggle the button again to restore the timeline.
-- Open Element timing to drag, trim, or keyboard-adjust an element’s visible interval.
-- Recover a deleted project with the Undo notice. Cancel an export from its progress card.
-- Export video, GIF, or an editable JSON project file. Import JSON from the
-  project library's upload button.
-
-Shortcuts: Space to play/pause, [ and ] to cycle elements while the canvas
-is focused, arrows to nudge a selected element (Shift for 10px) or step when
-nothing is selected, I for Properties, Escape to clear selection, Delete to
-remove an element, Ctrl/Command Z to undo and Ctrl/Command Shift Z to redo.
-
-Projects and generation checkpoints are autosaved to IndexedDB on this device.
-If generation is interrupted, completed scenes are retained. Open the draft
-and choose **Finish remaining scenes** to generate only missing scenes.
-Undo history is limited to 50 edits and lasts until the page is reloaded.
-
-## Visual system
-
-The studio uses the supplied Soft Cyan (`#90F1EF`), Petal Frost (`#FFD6E0`),
-and Light Gold (`#FFEF9F`) palette with dark teal text. Cyan marks selected
-items, gold marks active controls, and timing bars use pastel colors by element
-type. Design and Layers are separate inspector tabs. Typography, geometry, and
-timing can be expanded as needed; the phone sheet includes layer renaming,
-scene navigation, and precise time entry. Phone timing scrolls horizontally to
-keep trim targets usable. Timing sliders support arrow keys and Home/End, and
-announce changes and undo/redo to screen readers.
-
-## Architecture
-
-Paths below are relative to `next/`.
-
-```text
-src/components/studio/    New visual workspace, canvas, properties, playback
-src/lib/workspace/       Project state, undo/redo, IndexedDB, streaming client
-src/lib/project/         Portable document format, editing operations, templates
-src/lib/generation/      One scene planner and one validated generation pipeline
-src/lib/rendering/       Shared deterministic Canvas frame renderer
-src/lib/schema/          Single source of runtime schemas and TypeScript types
-src/lib/export/          Browser video and GIF encoders
-src/lib/evaluation/      Fixed evaluation prompts and visual diagnostics
-src/app/api/generate/    Single streaming API
+```sh
+cp .env.example .env.local
 ```
 
-The legacy chat/session model, dev routes, duplicate generation stack,
-Fabric dependency, architecture viewers, obsolete scripts, compatibility
-migration, and historical planning documents have been removed.
+Set `OPENROUTER_API_KEY` to your OpenRouter key and `DEFAULT_MODEL` to an
+OpenRouter model ID in `.env.local`, then restart the dev server. The key stays
+on the server. Choose **New video**, describe your idea, and pick a duration
+of 5, 10, 15, or 20 seconds.
 
-## Checks
+## Edit and export
 
-Run these commands from `next/`.
+1. **Start a project.** Choose a template from the library, import a project
+   JSON, or generate a video from a prompt.
+2. **Refine the scene.** Select a layer on the canvas or in **Properties → Layers**.
+   Drag it to move it or use a corner handle to resize it. Hold Shift while
+   resizing to preserve proportions. Use **Design** to edit text, colors,
+   position, size, and timing.
+3. **Review the motion.** Click a scene preview to jump to it, scrub the ruler
+   to seek, or change the playback speed. Open **Element timing** to move or
+   trim a layer’s visible interval. Use **Expand timeline** for more room
+   or **Expand canvas** to focus on the artwork.
+4. **Export.** Choose **Video** for MP4 or WebM, depending on browser support,
+   **Animated GIF** for a 480-pixel-wide loop, or **Project file** for an editable
+   JSON backup. Keep the tab visible during video export. The progress card
+   lets you cancel an export.
+
+<details>
+<summary>See the phone editor</summary>
+
+The adjustable Properties sheet keeps the canvas in view while you edit.
+
+<img src="docs/media/studio-mobile.png" alt="VideoGPT Studio on a phone with the canvas above the Properties sheet and controls for the scene, playhead, and selected text" width="390">
+
+</details>
+
+Projects and generation checkpoints are saved in IndexedDB in the current
+browser. After interrupted generation, reopen the draft and choose
+**Finish remaining scenes** to resume from the saved scenes. Use JSON export
+and import to move a project between browsers. The project deletion notice
+includes **Undo**.
+
+### Sample export
+
+Select **Database replication** in the template library to open this
+10-second explainer. The GIF below was exported from the studio.
+
+![Animated database replication explainer showing an update travel from a primary database to two replicas](docs/media/database-replication.gif)
+
+### Keyboard shortcuts
+
+| Action | Shortcut |
+| --- | --- |
+| Play or pause | Space |
+| Cycle through layers with the canvas focused | `[` or `]` |
+| Nudge the selected layer | Arrow keys, or Shift + arrow for 10 px |
+| Step through playback by 0.1 seconds with no layer selected | Left or Right arrow |
+| Toggle Properties | I |
+| Clear selection or exit the expanded canvas | Escape |
+| Delete the selected layer | Delete or Backspace |
+| Undo or redo | Ctrl/Command + Z or Ctrl/Command + Shift + Z |
+
+Undo history holds up to 50 edits and resets on reload.
+
+## Development
+
+The Next.js app lives in `next/`. Use that directory as the Vercel Root Directory.
+
+| Path within `next/` | Role |
+| --- | --- |
+| `src/components/studio/` | Editor, canvas, Properties, and timeline |
+| `src/lib/project/` and `src/lib/workspace/` | Project format, templates, editing, undo, and browser storage |
+| `src/lib/schema/` | Runtime schemas and TypeScript types |
+| `src/lib/generation/` and `src/app/api/generate/` | Scene planning, generation, and the streaming API |
+| `src/lib/rendering/` and `src/lib/export/` | Shared canvas renderer and browser encoders |
+| `src/lib/evaluation/` | Generation evaluation cases and visual diagnostics |
+
+Run the project checks from `next/`.
 
 ```sh
 npm test
@@ -91,7 +109,8 @@ npm run lint
 npm run build
 ```
 
-For browser regression tests, run the development server, then:
+With the development server running, install Chromium and run the browser
+regression tests.
 
 ```sh
 npx playwright install chromium
@@ -99,20 +118,9 @@ npm run test:ui
 ```
 
 Set `UI_BASE_URL` to test another server or `E2E_CHROMIUM_PATH` to use an
-existing Chromium executable. See [the UI review record](docs/ui-review.md)
-for the Opus score and verified interaction paths.
+existing Chromium executable. The [UI review record](docs/ui-review.md)
+describes the interactions covered.
 
-With provider credentials, `npm run evaluate` generates the fixed eight-case
-suite and writes project JSON, diagnostics, model identity, and timing into
-`evaluation-artifacts/`. Visual diagnostics flag potential problems; they do
-not replace reviewing rendered output. Live-model evaluation is not part of CI.
-
-## Current limits
-
-Storage is local to this browser; projects are portable through JSON backups.
-Live AI generation was verified with a five-second OpenRouter request.
-Successful encoded-file correctness has not been verified. Browser regression tests cover editing, responsive
-layout, recovery, and export cancellation. Video recording uses real time and requires a visible
-tab; browser support determines MP4 or WebM. GIF uses explicit frame intervals.
-There is no offline MP4 worker, cloud sync, audio, or public-hosting job service.
-Before a public release, add authentication/request budgets and rate limits.
+With OpenRouter configured, `npm run evaluate` runs eight generation cases and
+writes project JSON, diagnostics, model identity, and timing to
+`evaluation-artifacts/`.
