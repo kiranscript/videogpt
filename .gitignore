@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -23,6 +23,14 @@
 # misc
 .DS_Store
 *.pem
+*.local.md
+/demo
+/evaluation-artifacts/
+.agents
+skills-lock.json
+videographic
+.gemini
+agents.md
 
 # debug
 npm-debug.log*
@@ -30,7 +38,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — also covered by next/.gitignore, but kept here as a safety net
 .env*
 !.env.example
 
@@ -40,10 +48,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-/public/temp-project-data.js
 
-
-/evaluation-artifacts/
-
-/test-results/
-/playwright-report/
+# generated
+/src/generated/prisma

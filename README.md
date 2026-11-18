@@ -6,9 +6,11 @@ has a new interface, state model, and project workflow.
 
 ## Run
 
+The app lives in `next/`, which is also the Vercel Root Directory.
 Use Linux/macOS Node 22+ (Node 24 recommended):
 
 ```sh
+cd next
 npm ci
 npm run dev
 ```
@@ -60,6 +62,8 @@ announce changes and undo/redo to screen readers.
 
 ## Architecture
 
+Paths below are relative to `next/`.
+
 ```text
 src/components/studio/    New visual workspace, canvas, properties, playback
 src/lib/workspace/       Project state, undo/redo, IndexedDB, streaming client
@@ -77,6 +81,8 @@ Fabric dependency, architecture viewers, obsolete scripts, compatibility
 migration, and historical planning documents have been removed.
 
 ## Checks
+
+Run these commands from `next/`.
 
 ```sh
 npm test
